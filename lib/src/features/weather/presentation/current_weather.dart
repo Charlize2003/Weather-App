@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:open_weather_example_flutter/src/features/weather/application/providers.dart';
+import 'package:open_weather_example_flutter/src/features/weather/data/weather_data.dart';
 import 'package:open_weather_example_flutter/src/features/weather/presentation/weather_icon_image.dart';
 import 'package:provider/provider.dart';
 
@@ -26,20 +27,28 @@ class CurrentWeather extends StatelessWidget {
 class CurrentWeatherContents extends StatelessWidget {
   const CurrentWeatherContents({super.key, required this.data});
 
-  final WeatherData data;
+  final WeatherData? data;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    final temp = data.temp.celsius.toInt().toString();
-    final minTemp = data.minTemp.celsius.toInt().toString();
-    final maxTemp = data.maxTemp.celsius.toInt().toString();
+    if (data == null) {
+      return const CircularProgressIndicator();
+    }
+
+    final temp = data!.parameters.temp.toInt().toString();
+    final minTemp = data!.parameters.tempMin.toInt().toString();
+    final maxTemp = data!.parameters.tempMax.toInt().toString();
     final highAndLow = 'H:$maxTemp° L:$minTemp°';
+
+    final iconCode = data!.weatherInfo.isNotEmpty ? data!.weatherInfo[0].icon : '01d';
+    final iconUrl = 'https://openweathermap.org/img/wn/$iconCode@2x.png';
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        WeatherIconImage(iconUrl: data.iconUrl, size: 120),
+        WeatherIconImage(iconUrl: iconUrl, size: 120),
         Text(temp, style: textTheme.displayMedium),
         Text(highAndLow, style: textTheme.bodyMedium),
       ],

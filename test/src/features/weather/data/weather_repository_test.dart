@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:open_weather_example_flutter/src/api/api.dart';
+import 'package:open_weather_example_flutter/src/features/weather/data/weather_data.dart';
 import 'package:open_weather_example_flutter/src/features/weather/data/weather_repository.dart';
 
 class MockHttpClient extends Mock implements http.Client {}
@@ -53,8 +54,8 @@ const encodedWeatherJsonResponse = """
   }  
 """;
 
-final expectedWeatherFromJson = Weather(
-  weatherParams: WeatherParams(temp: 282.55, tempMin: 280.37, tempMax: 284.26),
+final expectedWeatherFromJson = WeatherData(
+  parameters: WeatherParams(temp: 282.55, tempMin: 280.37, tempMax: 284.26),
   weatherInfo: [
     WeatherInfo(
       description: 'clear sky',
@@ -62,7 +63,7 @@ final expectedWeatherFromJson = Weather(
       main: 'Clear',
     )
   ],
-  dt: 1560350645,
+  timestamp: 1560350645,
 );
 
 void main() {
@@ -71,6 +72,13 @@ void main() {
     final api = OpenWeatherMapAPI('apiKey');
     final weatherRepository = HttpWeatherRepository(api: api, client: mockHttpClient);
     //TODO Mock http and ensure weather is correct
+    final uri = api.weather('Pretoria');
+    when(() => mockHttpClient.get(uri)).thenAnswer((_) async {
+      return http.Response(encodedWeatherJsonResponse, 200);
+    });
+
+    final result = await weatherRepository.getWeather(location: 'Pretoria');
+    expect(result, equals(expectedWeatherFromJson));
   });
 
   test('repository with mocked http client, failure', () async {
@@ -78,6 +86,15 @@ void main() {
     final api = OpenWeatherMapAPI('apiKey');
     final weatherRepository = HttpWeatherRepository(api: api, client: mockHttpClient);
     //TODO Mock http 404 and ensure api returns CityNotFoundException
+    final uri = api.weather('UnknownCity');
+    when(() => mockHttpClient.get(uri)).thenAnswer((_) async {
+      return http.Response('Not Found', 404);
+    });
+
+    expect(
+      () async => await weatherRepository.getWeather(location: 'UnknownCity'),
+      throwsA(isA<Exception>()),
+    );
   });
 
   //TODO test providers data as well

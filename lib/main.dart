@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
             ChangeNotifierProvider<WeatherProvider>(create: (_) => WeatherProvider(), lazy: false),
           ],
           builder: (context, _) {
-            return const WeatherPage(city: 'London');
+            return const WeatherPage();
           }),
     );
   }
